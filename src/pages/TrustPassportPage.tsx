@@ -11,10 +11,10 @@ import { EmptyState } from "../components/Common";
 import type { Database } from "../lib/supabase";
 
 type Booking = Database["public"]["Tables"]["bookings"]["Row"];
-type Resource = Database["public"]["Tables"]["resources"]["Row"];
 
 interface Passport {
-  resource: Resource | null;
+  resource_id: string;
+  resource: { name: string; location?: string | null; type?: string | null } | null;
   bookings: Booking[];
   incidents: any[];
   checkouts: number;
@@ -45,8 +45,9 @@ export default function TrustPassportPage() {
 
   bookings.forEach((b) => {
     const resId = b.resource_id;
-    const existing = resourcePassports.get(resId) || {
-      resource: ((b as any).resource as Resource) || null,
+    const existing: Passport = resourcePassports.get(resId) || {
+      resource_id: resId,
+      resource: b.resource ? { name: b.resource.name } : null,
       bookings: [],
       incidents: [],
       checkouts: 0,
@@ -54,7 +55,7 @@ export default function TrustPassportPage() {
       incidentsCount: 0,
       lastCondition: null,
       lastReturnCondition: null,
-    } as Passport;
+    };
     existing.bookings.push(b);
     if (b.status === "Checked Out") existing.checkouts++;
     if (b.status === "Returned" || b.status === "Completed") existing.returns++;
@@ -157,7 +158,7 @@ export default function TrustPassportPage() {
                 const hasIncidents = p.incidentsCount > 0;
                 const trustScore = Math.max(0, 100 - p.incidentsCount * 20);
                 return (
-                  <Card key={p.resource?.id || res?.id} className="p-4 border">
+                  <Card key={p.resource_id} className="p-4 border">
                     <div className="flex justify-between items-start mb-3">
                       <div>
                         <h3 className="font-bold text-dark">{res?.name || "Unknown Resource"}</h3>

@@ -4,6 +4,15 @@ import type { Database } from "../lib/supabase";
 
 type Booking = Database["public"]["Tables"]["bookings"]["Row"];
 
+/**
+ * Booking row as returned by the bookings queries in this hook,
+ * which join the related resource and borrower profiles.
+ */
+export type BookingWithResource = Booking & {
+  resource: { name: string; owner_id: string } | null;
+  borrower: { full_name: string } | null;
+};
+
 export async function createBooking(
   resourceId: string,
   startTime: string,
@@ -121,7 +130,7 @@ export async function fetchOwnerRequests() {
 }
 
 export function useBookings() {
-  const [bookings, setBookings] = useState<Booking[]>([]);
+  const [bookings, setBookings] = useState<BookingWithResource[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -132,7 +141,7 @@ export function useBookings() {
       .select("*, resource:resources(name, owner_id), borrower:profiles!borrower_id(full_name)")
       .order("created_at", { ascending: false });
     if (error) setError(error.message);
-    else setBookings(data ?? []);
+    else setBookings((data ?? []) as BookingWithResource[]);
     setLoading(false);
   }, []);
 
