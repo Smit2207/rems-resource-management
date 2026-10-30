@@ -1,0 +1,293 @@
+@import "tailwindcss";
+
+@theme {
+  --color-ivory: #F7F5EF;
+  --color-forest: #183D32;
+  --color-forest-hover: #102A23;
+  --color-lime: #D5F36A;
+  --color-lime-hover: #B7E34E;
+  --color-card: #FFFFFF;
+  --color-dark: #1C2721;
+  --color-muted: #69746C;
+  --color-border: #E4E6DE;
+}
+
+@layer base {
+  body {
+    background-color: var(--color-ivory);
+    color: var(--color-dark);
+    font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    margin: 0;
+    line-height: 1.5;
+  }
+
+  * {
+    box-sizing: border-box;
+  }
+}
+
+@layer components {
+  .page {
+    min-height: 100vh;
+    background-color: var(--color-ivory);
+  }
+
+  .container {
+    max-width: 1200px;
+    margin-left: auto;
+    margin-right: auto;
+    padding-left: 1rem;
+    padding-right: 1rem;
+    padding-top: 1.5rem;
+    padding-bottom: 1.5rem;
+  }
+
+  .card {
+    background-color: var(--color-card);
+    border-radius: 1rem;
+    border: 1px solid var(--color-border);
+    padding: 1.5rem;
+    box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.08);
+  }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 0.75rem;
+    border: 1px solid var(--color-border);
+    background-color: #FFFFFF;
+    color: var(--color-dark);
+    font-weight: 600;
+    padding: 0.75rem 1.5rem;
+    font-size: 0.9375rem;
+    transition: all 0.2s;
+    outline: none;
+    cursor: pointer;
+    text-decoration: none;
+  }
+
+  .btn:hover:not(:disabled) {
+    background-color: rgba(24, 61, 50, 0.05);
+    border-color: #B9C9BA;
+  }
+
+  .btn:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 2px var(--color-forest), 0 0 0 2px #FFFFFF;
+  }
+
+  .btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  .btn-primary {
+    background-color: var(--color-forest);
+    color: #FFFFFF;
+    border-color: var(--color-forest);
+  }
+
+  .btn-primary:hover:not(:disabled) {
+    background-color: var(--color-forest-hover);
+    border-color: var(--color-forest-hover);
+  }
+
+  .btn-outline {
+    background-color: transparent;
+    color: var(--color-dark);
+  }
+
+  .btn-outline:hover:not(:disabled) {
+    background-color: rgba(24, 61, 50, 0.05);
+    border-color: var(--color-forest);
+  }
+
+  .btn-lime {
+    background-color: var(--color-lime);
+    color: var(--color-forest);
+    border-color: var(--color-lime);
+  }
+
+  .btn-lime:hover:not(:disabled) {
+    background-color: var(--color-lime-hover);
+    border-color: var(--color-lime-hover);
+  }
+
+  .input {
+    display: block;
+    width: 100%;
+    border-radius: 0.75rem;
+    border: 1px solid var(--color-border);
+    background-color: #FFFFFF;
+    color: var(--color-dark);
+    padding: 0.75rem 1rem;
+    font-size: 0.9375rem;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+
+  .input:focus {
+    border-color: var(--color-forest);
+    box-shadow: 0 0 0 2px rgba(24, 61, 50, 0.1);
+  }
+
+  .input::placeholder {
+    color: #9CA3AF;
+  }
+
+  select.input {
+    cursor: pointer;
+  }
+
+  textarea.input {
+    resize: vertical;
+    min-height: 100px;
+  }
+
+  .label {
+    display: block;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--color-dark);
+    margin-bottom: 0.375rem;
+  }
+
+  .help {
+    margin-top: 0.25rem;
+    font-size: 0.8125rem;
+    color: var(--color-muted);
+  }
+
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 9999px;
+    border: 1px solid transparent;
+    padding: 0.25rem 0.75rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.025em;
+  }
+
+  .badge-active {
+    background-color: #F0FDF4;
+    color: #166534;
+    border-color: #BBF7D0;
+  }
+  .badge-disabled {
+    background-color: #FFF1F2;
+    color: #BE123C;
+    border-color: #FFE4E6;
+  }
+  .badge-maintenance {
+    background-color: #FFFBEB;
+    color: #92400E;
+    border-color: #FEF3C7;
+  }
+  .badge-pending {
+    background-color: #FFFBEB;
+    color: #92400E;
+    border-color: #FEF3C7;
+  }
+  .badge-approved {
+    background-color: #EFF6FF;
+    color: #1D4ED8;
+    border-color: #BFDBFE;
+  }
+  .badge-rejected {
+    background-color: #FFF1F2;
+    color: #BE123C;
+    border-color: #FFE4E6;
+  }
+  .badge-cancelled {
+    background-color: #F8FAFC;
+    color: #475569;
+    border-color: #F1F5F9;
+  }
+  .badge-checked_out {
+    background-color: #EEF2FF;
+    color: #4338CA;
+    border-color: #E0E7FF;
+  }
+  .badge-returned {
+    background-color: #FAF5FF;
+    color: #6D28D9;
+    border-color: #EDE9FE;
+  }
+  .badge-completed {
+    background-color: #F0FDFA;
+    color: #047857;
+    border-color: #CCFBF1;
+  }
+  .badge-open {
+    background-color: #FFF1F2;
+    color: #BE123C;
+    border-color: #FFE4E6;
+  }
+  .badge-under_review {
+    background-color: #FFFBEB;
+    color: #92400E;
+    border-color: #FEF3C7;
+  }
+  .badge-resolved {
+    background-color: #F0FDFA;
+    color: #047857;
+    border-color: #CCFBF1;
+  }
+  .badge-student {
+    background-color: #F8FAFC;
+    color: #475569;
+    border-color: #F1F5F9;
+  }
+  .badge-manager {
+    background-color: #EFF6FF;
+    color: #1D4ED8;
+    border-color: #BFDBFE;
+  }
+  .badge-admin {
+    background-color: #FAF5FF;
+    color: #6D28D9;
+    border-color: #EDE9FE;
+  }
+
+  .skeleton {
+    background: linear-gradient(90deg, #F3F4F6 25%, #E5E7EB 50%, #F3F4F6 75%);
+    background-size: 200% 100%;
+    animation: skeleton-pulse 1.4s ease-in-out infinite;
+    border-radius: 0.5rem;
+  }
+
+  @keyframes skeleton-pulse {
+    0% { background-position: 200% 0%; }
+    100% { background-position: -200% 0%; }
+  }
+
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border-width: 0;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .skeleton {
+      animation: none;
+    }
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
