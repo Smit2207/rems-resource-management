@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { Upload, Trash2, AlertCircle } from "lucide-react";
 import { supabase } from "../lib/supabase";
 
@@ -22,10 +22,12 @@ export function ImageUpload({
 }: ImageUploadProps) {
   const [preview, setPreview] = useState<string | null>(value ?? null);
   const [uploading, setUploading] = useState(false);
+  const [progress, setProgress] = useState(0);
   const [error, setError] = useState("");
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Revoke object URL when preview changes
+  // Revoke object URL when the component unmounts or the preview URL changes
   useEffect(() => {
     return () => {
       if (previewUrl) URL.revokeObjectURL(previewUrl);
@@ -47,6 +49,7 @@ export function ImageUpload({
       const objectUrl = URL.createObjectURL(file);
       setPreview(objectUrl);
       setPreviewUrl(objectUrl);
+      setProgress(0);
 
       uploadFile(file);
     },
@@ -54,11 +57,21 @@ export function ImageUpload({
   );
 
   const uploadFile = async (file: File) => {
+    // Verify the user is authenticated before uploading.
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    if (authError || !user) {
+      setError("You must be signed in to upload an image.");
+      setUploading(false);
+      onChange(null);
+      return;
+    }
+
     setUploading(true);
     try {
       const fileExt = file.name.split(".").pop() ?? "jpg";
-      const fileName = `${crypto.randomUUID()}.${fileExt}`;
-      const filePath = `resource-images/${fileName}`;
+      // Unique, safe path inside the existing `resource-images` bucket.
+      // The bucket name is NOT duplicated in the object path.
+      const filePath = `${user.id}/${crypto.randomUUID()}.${fileExt.toLowerCase()}`;
 
       const { error: uploadError } = await supabase.storage
         .from("resource-images")
@@ -69,7 +82,6 @@ export function ImageUpload({
         });
 
       if (uploadError) {
-        // Provide actionable guidance for common Storage errors
         if (uploadError.message.includes("bucket") || uploadError.status === 404) {
           throw new Error(
             "Image storage bucket is not configured. Please contact an administrator to set up the 'resource-images' Storage bucket with public read access.",
@@ -90,6 +102,7 @@ export function ImageUpload({
       const publicUrl = urlData.publicUrl;
       setPreview(publicUrl);
       setPreviewUrl(publicUrl);
+      setProgress(100);
       onChange(publicUrl);
     } catch (err: any) {
       setError(err.message || "Image upload failed");
@@ -102,17 +115,24 @@ export function ImageUpload({
   const handleRemove = () => {
     setPreview(null);
     setPreviewUrl(null);
+    setProgress(0);
     onChange(null);
   };
 
   const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
+    if (disabled) return;
     const file = e.dataTransfer.files[0];
     if (file) handleFileSelect(file);
   };
 
   const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
+  };
+
+  const handleClick = () => {
+    if (disabled) return;
+    fileInputRef.current?.click();
   };
 
   return (
@@ -135,6 +155,7 @@ export function ImageUpload({
           </>
         ) : (
           <div
+            onClick={handleClick}
             onDrop={handleDrop}
             onDragOver={handleDragOver}
             className={`w-full h-48 rounded-lg border-2 border-dashed border-border flex flex-col items-center justify-center gap-2 cursor-pointer transition-colors ${
@@ -145,26 +166,29 @@ export function ImageUpload({
             <p className="text-sm text-muted">{label}</p>
             <p className="text-xs text-muted">JPEG, PNG, WebP, GIF (max 5MB)</p>
             <input
+              ref={fileInputRef}
               type="file"
               accept={accept}
               className="hidden"
               onChange={(e) => {
                 const file = e.target.files?.[0];
                 if (file) handleFileSelect(file);
+                // Reset so the same file can be selected again.
+                e.target.value = "";
               }}
             />
           </div>
         )}
       </div>
+      {uploading && (
+        <div className="text-xs text-forest text-center">
+          Uploading image… {progress > 0 ? `${progress}%` : ""}
+        </div>
+      )}
       {error && (
         <div className="p-3 rounded bg-rose-50 text-rose-700 text-sm flex items-center gap-2">
           <AlertCircle className="h-4 w-4" />
           {error}
-        </div>
-      )}
-      {uploading && (
-        <div className="text-xs text-forest text-center">
-          Uploading image…
         </div>
       )}
     </div>

@@ -6,11 +6,18 @@ type Booking = Database["public"]["Tables"]["bookings"]["Row"];
 
 /**
  * Booking row as returned by the bookings queries in this hook,
- * which join the related resource and borrower profiles.
+ * which join the related resource and borrower profile.
  */
 export type BookingWithResource = Booking & {
-  resource: { name: string; owner_id: string } | null;
-  borrower: { full_name: string } | null;
+  resource: {
+    name: string;
+    location: string | null;
+    type: string | null;
+    owner_id: string;
+  } | null;
+  borrower: {
+    full_name: string;
+  } | null;
 };
 
 export async function createBooking(
@@ -138,7 +145,7 @@ export function useBookings() {
     setLoading(true);
     const { data, error } = await supabase
       .from("bookings")
-      .select("*, resource:resources(name, owner_id), borrower:profiles!borrower_id(full_name)")
+      .select("*, resource:resources(name, location, type, owner_id), borrower:profiles!borrower_id(full_name)")
       .order("created_at", { ascending: false });
     if (error) setError(error.message);
     else setBookings((data ?? []) as BookingWithResource[]);

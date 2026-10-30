@@ -40,11 +40,18 @@ export async function getProfile(): Promise<AppUser | null> {
   return mapProfile(data);
 }
 
+export function getAuthRedirectUrl(): string {
+  return `${window.location.origin}/login`;
+}
+
 export async function signUp(email: string, password: string, fullName: string) {
   const { data, error } = await supabase.auth.signUp({
     email,
     password,
-    options: { data: { full_name: fullName } },
+    options: {
+      data: { full_name: fullName },
+      emailRedirectTo: getAuthRedirectUrl(),
+    },
   });
   return { data, error };
 }
@@ -66,6 +73,7 @@ export async function resendConfirmation(email: string) {
   const { error } = await supabase.auth.resend({
     type: "signup",
     email,
+    options: { emailRedirectTo: getAuthRedirectUrl() },
   });
   return { error };
 }

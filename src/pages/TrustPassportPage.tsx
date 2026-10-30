@@ -4,18 +4,23 @@ import {
   RefreshCw,
   Info,
 } from "lucide-react";
-import { useBookings } from "../hooks/useBookings";
+import { useBookings, type BookingWithResource } from "../hooks/useBookings";
+import { supabase } from "../lib/supabase";
 import { PageLayout } from "../components/PageLayout";
 import { Card } from "../components/Card";
 import { EmptyState } from "../components/Common";
-import type { Database } from "../lib/supabase";
 
-type Booking = Database["public"]["Tables"]["bookings"]["Row"];
+interface ResourceSummary {
+  name: string;
+  location: string | null;
+  type: string | null;
+  owner_id: string;
+}
 
 interface Passport {
   resource_id: string;
-  resource: { name: string; location?: string | null; type?: string | null } | null;
-  bookings: Booking[];
+  resource: ResourceSummary | null;
+  bookings: BookingWithResource[];
   incidents: any[];
   checkouts: number;
   returns: number;
@@ -25,10 +30,31 @@ interface Passport {
 }
 
 export default function TrustPassportPage() {
-  const { bookings, loading: bookingsLoading } = useBookings();
+  const { bookings, loading: bookingsLoading, error: bookingsError } =
+    useBookings();
 
   const [incidents, setIncidents] = useState<any[]>([]);
   const [error, setError] = useState<string | null>(null);
+
+  // Load incidents using the authenticated Supabase client.
+  const loadIncidents = useCallback(async () => {
+    try {
+      const { data, error: err } = await supabase
+        .from("incidents")
+        .select(
+          "*, booking:bookings(resource:resources(name, location, type, owner_id))",
+        )
+        .order("created_at", { ascending: false });
+      if (err) throw err;
+      setIncidents(data ?? []);
+    } catch (e: any) {
+      setError(e.message || "Could not load incidents");
+    }
+  }, []);
+
+  useEffect(() => {
+    loadIncidents();
+  }, [loadIncidents]);
 
   if (bookingsLoading) {
     return (
@@ -47,7 +73,14 @@ export default function TrustPassportPage() {
     const resId = b.resource_id;
     const existing: Passport = resourcePassports.get(resId) || {
       resource_id: resId,
-      resource: b.resource ? { name: b.resource.name } : null,
+      resource: b.resource
+        ? {
+            name: b.resource.name,
+            location: b.resource.location,
+            type: b.resource.type,
+            owner_id: b.resource.owner_id,
+          }
+        : null,
       bookings: [],
       incidents: [],
       checkouts: 0,
@@ -63,24 +96,6 @@ export default function TrustPassportPage() {
     if (b.return_condition) existing.lastReturnCondition = b.return_condition;
     resourcePassports.set(resId, existing);
   });
-
-  // Load incidents
-  const loadIncidents = useCallback(async () => {
-    try {
-      const { data, error: err } = await (globalThis as any).supabase
-        .from("incidents")
-        .select("*, booking:bookings(resource:resources(name))")
-        .order("created_at", { ascending: false });
-      if (err) throw err;
-      setIncidents(data ?? []);
-    } catch (e: any) {
-      setError(e.message || "Could not load incidents");
-    }
-  }, []);
-
-  useEffect(() => {
-    loadIncidents();
-  }, [loadIncidents]);
 
   // Merge incidents into passports
   incidents.forEach((inc) => {
@@ -100,6 +115,8 @@ export default function TrustPassportPage() {
     (a, b) => b.incidentsCount - a.incidentsCount || b.checkouts - a.checkouts
   );
 
+  const hasError = bookingsError || error;
+
   return (
     <PageLayout>
       <div className="max-w-5xl">
@@ -115,9 +132,9 @@ export default function TrustPassportPage() {
           </div>
         </div>
 
-        {error && (
+        {hasError && (
           <div className="p-3 rounded bg-rose-50 border border-rose-100 text-rose-700 text-sm mb-4">
-            {error}
+            {hasError}
           </div>
         )}
 
@@ -130,6 +147,12 @@ export default function TrustPassportPage() {
             <div className="text-sm text-muted">Total Checkouts</div>
             <div className="text-2xl font-bold text-dark">
               {passportArray.reduce((sum, p) => sum + p.checkouts, 0)}
+            </div>
+          </Card>
+          <Card className="p-4">
+            <div className="text-sm text-muted">Total Returns</div>
+            <div className="text-2xl font-bold text-dark">
+              {passportArray.reduce((sum, p) => sum + p.returns, 0)}
             </div>
           </Card>
           <Card className="p-4">
@@ -161,7 +184,9 @@ export default function TrustPassportPage() {
                   <Card key={p.resource_id} className="p-4 border">
                     <div className="flex justify-between items-start mb-3">
                       <div>
-                        <h3 className="font-bold text-dark">{res?.name || "Unknown Resource"}</h3>
+                        <h3 className="font-bold text-dark">
+                          {res?.name || "Unknown Resource"}
+                        </h3>
                         <p className="text-xs text-muted">
                           {res?.location || "—"} • {res?.type || "—"}
                         </p>
